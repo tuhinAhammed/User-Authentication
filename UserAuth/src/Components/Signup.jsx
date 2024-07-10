@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import logo from "../assets/demoLogo.png"
 import InputBox from "./IputBox"
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import axios from "axios"
 const Signup = () => {
     const [error, setError] = useState("")
     const [success, setSuccess] = useState("")
@@ -17,45 +18,69 @@ const Signup = () => {
             ...userData, [e.target.name]: e.target.value
         })
     }
-    
+    const navigate = useNavigate()
 
     // database data send
 
-        const handleSubmit = (e) => {
-            // e.preventDefault()
-            const { firstName, lastName, email, password, gender } = userData
-            if (!firstName) {
-                setError("Enter First Name");
-            }
-            else if (!lastName) {
-                setError("Enter Last Name");
-            }
-            else if (!email) {
-                setError("Enter Email Address");
-            }
-            else if (!password) {
-                setError("Enter a Password");
-            }
-            else if (!firstName) {
-                setError("Enter First Name");
-            }
-            else if (!gender) {
-                setError("Select Your Gender")
-            }
-            else {
-                setError("")
-                setSuccess("Registration data susseccfully Done")
-                setUserData({
-                    firstName: "",
-                    lastName: "",
-                    email: "",
-                    password: "",
-                    // gender: ""
-                })
-                console.log(userData);
-    
-            }
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        const { firstName, lastName, email, password, gender } = userData
+        if (!firstName) {
+            setError("Enter First Name");
         }
+        else if (!lastName) {
+            setError("Enter Last Name");
+        }
+        else if (!email) {
+            setError("Enter Email Address");
+        }
+        else if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
+            setError("Enter Valid Email Address");
+        }
+        else if (!password) {
+            setError("Enter a Password ");
+
+        }
+        else if (!/[A-Za-z\d]{6,}/.test(password)) {
+            setError("Password should be  Six characters:")
+        }
+
+
+        else if (!/^(?=.*\d)/.test(password)) {
+            setError("Give One Number:")
+        }
+        else if (!/^(?=.*[A-Za-z])/.test(password)) {
+            setError("Give One string:")
+        }
+
+        else if (!gender) {
+            setError("Select Your Gender")
+        }
+        else {
+            setError("")
+            
+            setSuccess("Registration data susseccfully Done")
+            const submited =await axios.post("http://localhost:3000/registration" , {
+                firstName: userData.firstName,
+                lastName: userData.lastName,
+                email: userData.email,
+                password: userData.password,
+                gender: userData.gender
+
+            }) 
+            setUserData({
+                firstName: "",
+                lastName: "",
+                email: "",
+                password: "",
+                gender: ""
+            })
+            console.log(userData);
+            setTimeout(() => {
+                navigate("/login")
+            },[1000])
+        }
+    }
     return (
         <div className='grid items-center grid-cols-1 md:grid-cols-2 w-full h-screen gap-10'>
             <div className=''>
@@ -71,13 +96,13 @@ const Signup = () => {
                             {success}
                         </div>
                 }
-                <form action="" className='pb-10 m-auto pt-6' >
+                <div action="" className='pb-10 m-auto pt-6' >
                     <div className="grid grid-cols-1 md:grid-cols-2 justify-center gap-x-4 ">
-                        <InputBox name="firstName" label="FirstName :" type="text" placeholder="Your Name" onChange={handleChange} />
-                        <InputBox name="lastName" label="LastName :" type="text" placeholder="Your LastName" onChange={handleChange} />
+                        <InputBox name="firstName" value={userData.firstName} label="FirstName :" type="text" placeholder="Your Name" onChange={handleChange} />
+                        <InputBox name="lastName" label="LastName :" type="text" placeholder="Your LastName" value={userData.lastName} onChange={handleChange} />
                     </div>
-                    <InputBox name="email" label="Email :" type="email" placeholder="Your Email" className="mt-4" onChange={handleChange} />
-                    <InputBox name="password" label="Password :" type="password" placeholder="Your Password" className="mt-4" onChange={handleChange} />
+                    <InputBox name="email" value={userData.email} label="Email :" type="email" placeholder="Your Email" className="mt-4" onChange={handleChange} />
+                    <InputBox name="password" value={userData.password} label="Password :" type="password" placeholder="Your Password" className="mt-4" onChange={handleChange} />
                     <div className='mt-4'>
                         <label htmlFor="gender">Gender :</label>
                         <div className='flex gap-6'>
@@ -91,7 +116,7 @@ const Signup = () => {
                             <span className='text-theme ml-2 font-semibold'>Login Now</span>
                         </Link>
                     </p>
-                </form>
+                </div>
             </div>
         </div>
     )
